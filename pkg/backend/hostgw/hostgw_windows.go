@@ -161,7 +161,7 @@ func (be *HostgwBackend) RegisterNetwork(ctx context.Context, wg *sync.WaitGroup
 		// Wait for the network to populate Management IP
 		log.Infof("Waiting to get ManagementIP from HNSNetwork %s", networkName)
 		var newNetworkID = newNetwork.Id
-		waitErr := wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 5*time.Second, true, func(context.Context) (done bool, err error) {
+		waitErr := wait.PollImmediateWithContext(ctx, 500*time.Millisecond, 5*time.Second, func(context.Context) (done bool, err error) {
 			newNetwork, lastErr = hcsshim.HNSNetworkRequest("GET", newNetworkID, "")
 			return newNetwork != nil && len(newNetwork.ManagementIP) != 0, nil
 		})
@@ -179,7 +179,7 @@ func (be *HostgwBackend) RegisterNetwork(ctx context.Context, wg *sync.WaitGroup
 		if err != nil {
 			return nil, errors.Wrapf(err, "Failed to parse management ip (%s)", newNetwork.ManagementIP)
 		}
-		waitErr = wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 5*time.Second, true, func(context.Context) (done bool, err error) {
+		waitErr = wait.PollImmediateWithContext(ctx, 500*time.Millisecond, 5*time.Second, func(context.Context) (done bool, err error) {
 			_, lastErr = ip.GetInterfaceByIP(managementIP.ToIP())
 			return lastErr == nil, nil
 		})
@@ -226,7 +226,7 @@ func (be *HostgwBackend) RegisterNetwork(ctx context.Context, wg *sync.WaitGroup
 
 	// Wait for the bridgeEndpoint to attach to the host
 	log.Infof("Waiting to attach bridge endpoint %s to host", bridgeEndpointName)
-	waitErr = wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 5*time.Second, true, func(context.Context) (done bool, err error) {
+	waitErr = wait.PollImmediateWithContext(ctx, 500*time.Millisecond, 5*time.Second, func(context.Context) (done bool, err error) {
 		lastErr = expectedBridgeEndpoint.HostAttach(1)
 		if lastErr == nil {
 			return true, nil
