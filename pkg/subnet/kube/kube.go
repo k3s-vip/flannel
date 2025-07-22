@@ -139,7 +139,7 @@ func NewSubnetManager(ctx context.Context, apiUrl, kubeconfig, prefix, netConfPa
 		go sm.Run(ctx)
 
 		log.Infof("Waiting %s for node controller to sync", nodeControllerSyncTimeout)
-		err = wait.PollUntilContextTimeout(ctx, time.Second, nodeControllerSyncTimeout, true, func(context.Context) (bool, error) {
+		err = wait.PollImmediateWithContext(ctx, time.Second, nodeControllerSyncTimeout, func(context.Context) (bool, error) {
 			ch := make(chan bool, 1)
 			go func() {
 				// HasSynced() is a blocking call waiting on
@@ -351,7 +351,7 @@ func (ksm *kubeSubnetManager) GetNetworkConfig(ctx context.Context) (*subnet.Con
 func (ksm *kubeSubnetManager) AcquireLease(ctx context.Context, attrs *lease.LeaseAttrs) (*lease.Lease, error) {
 	var cachedNode *v1.Node
 	var err error
-	waitErr := wait.PollUntilContextTimeout(ctx, 3*time.Second, 30*time.Second, true, func(context.Context) (done bool, err error) {
+	waitErr := wait.PollImmediateWithContext(ctx, 3*time.Second, 30*time.Second, func(context.Context) (done bool, err error) {
 		if ksm.disableNodeInformer {
 			cachedNode, err = ksm.client.CoreV1().Nodes().Get(ctx, ksm.nodeName, metav1.GetOptions{ResourceVersion: "0"})
 		} else {
@@ -472,7 +472,7 @@ func (ksm *kubeSubnetManager) AcquireLease(ctx context.Context, attrs *lease.Lea
 			return nil, fmt.Errorf("failed to create patch for node %q: %v", ksm.nodeName, err)
 		}
 
-		waitErr := wait.PollUntilContextTimeout(ctx, 3*time.Second, 30*time.Second, true, func(context.Context) (done bool, err error) {
+		waitErr := wait.PollImmediateWithContext(ctx, 3*time.Second, 30*time.Second, func(context.Context) (done bool, err error) {
 			_, err = ksm.client.CoreV1().Nodes().Patch(ctx, ksm.nodeName, types.StrategicMergePatchType, patchBytes, metav1.PatchOptions{}, "status")
 			if err != nil {
 				log.V(2).Infof("Failed to patch node %q: %v", ksm.nodeName, err)
@@ -631,7 +631,7 @@ func (ksm *kubeSubnetManager) CompleteLease(ctx context.Context, lease *lease.Le
 		go ksm.clusterCIDRController.Run(ctx.Done())
 
 		log.Infof("Waiting %s for clusterCIDR controller to sync...", nodeControllerSyncTimeout)
-		err := wait.PollUntilContextTimeout(ctx, time.Second, nodeControllerSyncTimeout, true, func(context.Context) (bool, error) {
+		err := wait.PollImmediateWithContext(ctx, time.Second, nodeControllerSyncTimeout, func(context.Context) (bool, error) {
 			return ksm.clusterCIDRController.HasSynced(), nil
 		})
 
