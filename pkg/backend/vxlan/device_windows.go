@@ -135,7 +135,7 @@ func ensureNetwork(ctx context.Context, expectedNetwork *hcn.HostComputeNetwork,
 		// Wait for the network to populate Management IP
 		log.Infof("Waiting to get ManagementIP from HostComputeNetwork %s", networkName)
 		var newNetworkID = newNetwork.Id
-		waitErr = wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 5*time.Second, true, func(context.Context) (done bool, err error) {
+		waitErr = wait.PollImmediateWithContext(ctx, 500*time.Millisecond, 5*time.Second, func(context.Context) (done bool, err error) {
 			newNetwork, lastErr = hcn.GetNetworkByID(newNetworkID)
 			return newNetwork != nil && len(getManagementIP(newNetwork)) != 0, nil
 		})
@@ -237,7 +237,7 @@ func checkHostNetworkReady(ctx context.Context, network *hcn.HostComputeNetwork)
 		return errors.Wrapf(err, "Failed to parse management ip (%s)", managementIP)
 	}
 
-	waitErr := wait.PollUntilContextTimeout(ctx, 5*time.Second, 45*time.Second, true, func(context.Context) (done bool, err error) {
+	waitErr := wait.PollImmediateWithContext(ctx, 5*time.Second, 45*time.Second, func(context.Context) (done bool, err error) {
 		iface, lastErr := ip.GetInterfaceByIP(managementIPv4.ToIP())
 		if lastErr == nil {
 			log.Infof("Host interface: %s bound by %s ready", iface.Name, network.Name)
