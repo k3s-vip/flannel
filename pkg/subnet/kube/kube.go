@@ -32,11 +32,13 @@ import (
 	"golang.org/x/sync/semaphore"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
 	clientset "k8s.io/client-go/kubernetes"
+	listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
@@ -67,7 +69,7 @@ type kubeSubnetManager struct {
 	annotationPrefix          string
 	client                    clientset.Interface
 	nodeName                  string
-	nodeStore                 cache.Store
+	nodeStore                 listers.NodeLister
 	nodeController            cache.Controller
 	subnetConf                *subnet.Config
 	events                    chan lease.Event
@@ -200,48 +202,47 @@ func newKubeSubnetManager(ctx context.Context, c clientset.Interface, sc *subnet
 		ksm.disableNodeInformer = true
 	}
 	if !ksm.disableNodeInformer {
-		listerWatcher := cache.NewListWatchFromClient(
-			ksm.client.CoreV1().RESTClient(),
-			"nodes",
-			"",
-			fields.Everything())
-
-		handler := cache.ResourceEventHandlerFuncs{
-			AddFunc: func(obj interface{}) {
-				ksm.handleAddLeaseEvent(ctx, lease.EventAdded, obj)
+		indexer, controller := cache.NewIndexerInformer(
+			&cache.ListWatch{
+				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+					return ksm.client.CoreV1().Nodes().List(ctx, options)
+				},
+				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+					return ksm.client.CoreV1().Nodes().Watch(ctx, options)
+				},
 			},
-			UpdateFunc: func(oldObj, newObj interface{}) {
-				ksm.handleUpdateLeaseEvent(ctx, oldObj, newObj)
-			},
-			DeleteFunc: func(obj interface{}) {
-				_, isNode := obj.(*v1.Node)
-				// We can get DeletedFinalStateUnknown instead of *api.Node here and we need to handle that correctly.
-				if !isNode {
-					deletedState, ok := obj.(cache.DeletedFinalStateUnknown)
-					if !ok {
-						log.Infof("Error received unexpected object: %v", obj)
-						return
+			&v1.Node{},
+			resyncPeriod,
+			cache.ResourceEventHandlerFuncs{
+				AddFunc: func(obj interface{}) {
+					ksm.handleAddLeaseEvent(ctx, lease.EventAdded, obj)
+				},
+				UpdateFunc: func(oldObj, newObj interface{}) {
+					ksm.handleUpdateLeaseEvent(ctx, oldObj, newObj)
+				},
+				DeleteFunc: func(obj interface{}) {
+					_, isNode := obj.(*v1.Node)
+					// We can get DeletedFinalStateUnknown instead of *api.Node here and we need to handle that correctly.
+					if !isNode {
+						deletedState, ok := obj.(cache.DeletedFinalStateUnknown)
+						if !ok {
+							log.Infof("Error received unexpected object: %v", obj)
+							return
+						}
+						node, ok := deletedState.Obj.(*v1.Node)
+						if !ok {
+							log.Infof("Error deletedFinalStateUnknown contained non-Node object: %v", deletedState.Obj)
+							return
+						}
+						obj = node
 					}
-					node, ok := deletedState.Obj.(*v1.Node)
-					if !ok {
-						log.Infof("Error deletedFinalStateUnknown contained non-Node object: %v", deletedState.Obj)
-						return
-					}
-					obj = node
-				}
-				ksm.handleAddLeaseEvent(ctx, lease.EventRemoved, obj)
+					ksm.handleAddLeaseEvent(ctx, lease.EventRemoved, obj)
+				},
 			},
-		}
-		store, controller := cache.NewInformerWithOptions(cache.InformerOptions{
-			ListerWatcher: listerWatcher,
-			ObjectType:    &v1.Node{},
-			ResyncPeriod:  resyncPeriod,
-			Handler:       handler,
-			Indexers:      cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
-		})
-
+			cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
+		)
 		ksm.nodeController = controller
-		ksm.nodeStore = store
+		ksm.nodeStore = listers.NewNodeLister(indexer)
 	}
 
 	return &ksm, nil
@@ -349,23 +350,16 @@ func (ksm *kubeSubnetManager) GetNetworkConfig(ctx context.Context) (*subnet.Con
 // registering
 func (ksm *kubeSubnetManager) AcquireLease(ctx context.Context, attrs *lease.LeaseAttrs) (*lease.Lease, error) {
 	var cachedNode *v1.Node
+	var err error
 	waitErr := wait.PollUntilContextTimeout(ctx, 3*time.Second, 30*time.Second, true, func(context.Context) (done bool, err error) {
 		if ksm.disableNodeInformer {
 			cachedNode, err = ksm.client.CoreV1().Nodes().Get(ctx, ksm.nodeName, metav1.GetOptions{ResourceVersion: "0"})
-			if err != nil {
-				log.V(2).Infof("Failed to get node %q: %v", ksm.nodeName, err)
-				return false, nil
-			}
 		} else {
-			nodeIface, exists, err := ksm.nodeStore.GetByKey(ksm.nodeName)
-			if err != nil {
-				log.V(2).Infof("failed to get node %q: %v", ksm.nodeName, err)
-				return false, nil
-			} else if !exists {
-				log.V(2).Infof("node %q does not exist ", ksm.nodeName)
-				return false, nil
-			}
-			cachedNode = nodeIface.(*v1.Node)
+			cachedNode, err = ksm.nodeStore.Get(ksm.nodeName)
+		}
+		if err != nil {
+			log.V(2).Infof("Failed to get node %q: %v", ksm.nodeName, err)
+			return false, nil
 		}
 		return true, nil
 	})
@@ -379,7 +373,7 @@ func (ksm *kubeSubnetManager) AcquireLease(ctx context.Context, attrs *lease.Lea
 	}
 
 	var bd, v6Bd []byte
-	bd, err := attrs.BackendData.MarshalJSON()
+	bd, err = attrs.BackendData.MarshalJSON()
 	if err != nil {
 		return nil, err
 	}
