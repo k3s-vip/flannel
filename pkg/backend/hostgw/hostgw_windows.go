@@ -27,9 +27,9 @@ import (
 	"github.com/flannel-io/flannel/pkg/lease"
 	"github.com/flannel-io/flannel/pkg/routing"
 	"github.com/flannel-io/flannel/pkg/subnet"
+	wait "github.com/flannel-io/flannel/pkg/utils"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/json"
-	"k8s.io/apimachinery/pkg/util/wait"
 	log "k8s.io/klog/v2"
 )
 
