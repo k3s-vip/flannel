@@ -24,8 +24,8 @@ import (
 
 	"github.com/Microsoft/hcsshim/hcn"
 	"github.com/flannel-io/flannel/pkg/ip"
+	wait "github.com/flannel-io/flannel/pkg/utils"
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/util/wait"
 	log "k8s.io/klog/v2"
 )
 
