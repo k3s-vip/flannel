@@ -100,12 +100,12 @@ require (
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20220101234140-673ab2c3ae75 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xiang90/probing v0.0.0-20221125231312-a49e3df8f510 // indirect
-	go.etcd.io/bbolt v1.5.0 // indirect
-	go.etcd.io/etcd/etcdctl/v3 v3.7.1 // indirect
-	go.etcd.io/etcd/pkg/v3 v3.7.1 // indirect
-	go.etcd.io/etcd/server/v3 v3.7.1 // indirect
+	go.etcd.io/bbolt v1.4.3 // indirect
+	go.etcd.io/etcd/etcdctl/v3 v3.6.15 // indirect
+	go.etcd.io/etcd/pkg/v3 v3.6.15 // indirect
+	go.etcd.io/etcd/server/v3 v3.6.15 // indirect
 	go.etcd.io/gofail v0.2.0 // indirect
-	go.etcd.io/raft/v3 v3.7.0 // indirect
+	go.etcd.io/raft/v3 v3.6.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.68.0 // indirect
 	go.opentelemetry.io/otel v1.45.0 // indirect
@@ -146,10 +146,10 @@ require (
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	go.etcd.io/etcd/api/v3 v3.7.1
-	go.etcd.io/etcd/client/pkg/v3 v3.7.1
-	go.etcd.io/etcd/client/v3 v3.7.1
-	go.etcd.io/etcd/tests/v3 v3.7.1
+	go.etcd.io/etcd/api/v3 v3.6.15
+	go.etcd.io/etcd/client/pkg/v3 v3.6.15
+	go.etcd.io/etcd/client/v3 v3.6.15
+	go.etcd.io/etcd/tests/v3 v3.6.15
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.55.0 // indirect
