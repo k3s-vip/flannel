@@ -2,10 +2,10 @@ module github.com/flannel-io/flannel
 
 go 1.26.8
 
-// replace github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.2.0
+replace github.com/containernetworking/plugins => github.com/k3s-vip/plugins v1.10.0-vip
 
 require (
-	github.com/Microsoft/hcsshim v0.15.0
+	github.com/Microsoft/hcsshim v0.14.1
 	github.com/bronze1man/goStrongswanVici v0.0.0-20231128135937-211cef3b0b20
 	github.com/containernetworking/plugins v1.10.0
 	github.com/coreos/go-iptables v0.8.0
@@ -52,7 +52,7 @@ require (
 	github.com/cheggaaa/pb/v3 v3.1.7 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
-	github.com/containerd/cgroups/v3 v3.1.3 // indirect
+	github.com/containerd/cgroups/v3 v3.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.12.2 // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
@@ -97,12 +97,12 @@ require (
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20220101234140-673ab2c3ae75 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xiang90/probing v0.0.0-20221125231312-a49e3df8f510 // indirect
-	go.etcd.io/bbolt v1.5.0 // indirect
-	go.etcd.io/etcd/etcdctl/v3 v3.7.3 // indirect
-	go.etcd.io/etcd/pkg/v3 v3.7.3 // indirect
-	go.etcd.io/etcd/server/v3 v3.7.3 // indirect
+	go.etcd.io/bbolt v1.4.3 // indirect
+	go.etcd.io/etcd/etcdctl/v3 v3.6.17 // indirect
+	go.etcd.io/etcd/pkg/v3 v3.6.17 // indirect
+	go.etcd.io/etcd/server/v3 v3.6.17 // indirect
 	go.etcd.io/gofail v0.2.0 // indirect
-	go.etcd.io/raft/v3 v3.7.0 // indirect
+	go.etcd.io/raft/v3 v3.6.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.72.0 // indirect
 	go.opentelemetry.io/otel v1.47.0 // indirect
@@ -143,10 +143,10 @@ require (
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
 	github.com/sirupsen/logrus v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	go.etcd.io/etcd/api/v3 v3.7.3
-	go.etcd.io/etcd/client/pkg/v3 v3.7.3
-	go.etcd.io/etcd/client/v3 v3.7.3
-	go.etcd.io/etcd/tests/v3 v3.7.3
+	go.etcd.io/etcd/api/v3 v3.6.17
+	go.etcd.io/etcd/client/pkg/v3 v3.6.17
+	go.etcd.io/etcd/client/v3 v3.6.17
+	go.etcd.io/etcd/tests/v3 v3.6.17
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/sys v0.50.0
